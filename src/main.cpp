@@ -1,6 +1,8 @@
 #include "chip8.h"
 #include "display.h"
 #include <SDL2/SDL.h>
+#include <ctime>
+
 
 using namespace std;
 
@@ -17,6 +19,25 @@ int main(int argc, char** argv)
 {
     SDL_Renderer* renderer = initializeDisplay();
     chip8.loadProgram("games/IBM_Logo.ch8");
+
+    std::time_t current_time;
+    
+    // Perform fetch, execute, decode cycle 660 times per second
+    //      (this is the chip8 instructions per second)
+    while(true){
+        current_time = std::time(nullptr);
+        
+        // Fetch, execute, decode
+        for(int i = 0; i < 660; i++)
+        {
+            
+        }
+
+        // wait until the remainder of 1 second has passed
+        while(current_time == std::time(nullptr));
+    }
+
+    
 
     SDL_RenderClear(renderer);
     SDL_RenderPresent(renderer);

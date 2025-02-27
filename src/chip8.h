@@ -10,6 +10,7 @@ using namespace std;
 class Chip8{
     public:
         void loadProgram(string path);
+
         Chip8();
     private:
         // CPU memory
