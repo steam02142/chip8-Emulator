@@ -1,10 +1,16 @@
 #include <iostream>
 #include <cstdint>
+#include <string.h>
+#include <fstream>
+#include <filesystem>
+#include <vector>
+
 using namespace std;
 
 class Chip8{
     public:
-        void initialize();
+        void loadProgram(string path);
+        Chip8();
     private:
         // CPU memory
         uint8_t memory[4096];
