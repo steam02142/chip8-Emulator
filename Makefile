@@ -17,7 +17,7 @@ all: $(TARGET)
 
 # Rule for the target program
 $(TARGET): $(OBJECTS)
-	$(CXX) $(CXXFLAGS) -o $@ $^
+	$(CXX) $(CXXFLAGS) -o $@ $^ -lSDL2
 
 # Compile source files into object files
 $(BUILD_DIR)/main.o: $(SRC_DIR)/main.cpp $(SRC_DIR)/chip8.h $(SRC_DIR)/display.h
