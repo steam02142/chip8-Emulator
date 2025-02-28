@@ -41,6 +41,89 @@ void Chip8::loadProgram(string path)
     copy(reinterpret_cast<uint8_t*>(buffer), reinterpret_cast<uint8_t*>(buffer) + fileSize, memory + 0x200);
 }
 
+void Chip8::fetch(uint16_t& opcode)
+{
+    // Reset opcode
+    opcode = 0;
+
+    // Grabs the next two bytes, left shifting the first to make room for the second
+    opcode = memory[PC];
+    opcode = opcode << 8;
+    opcode = opcode | memory[PC + 1];
+    PC += 2;
+
+}
+
+void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight])
+{
+    uint16_t firstHex = opcode & 0xF000;
+    uint16_t lastHex = opcode & 0x000F;
+    uint16_t last3Hex = opcode & 0x0FFF;
+
+    switch (firstHex)
+    {
+    case 0x0000: // 00E0 (clear screen)
+        cout << "0 case\n";
+        clearDisplay(renderer, display);
+        break;
+    case 0x1000:
+        cout << "1 case, jumping from " << PC << " to " << last3Hex << endl;
+        PC = last3Hex;
+        break;
+    case 0x2000:
+        cout << "2 case\n";
+        break;
+    case 0x3000:
+        cout << "3 case\n";
+        break;
+    case 0x4000:
+        cout << "4 case\n";
+        break;
+    case 0x5000:
+        cout << "5 case\n";
+        break;
+    case 0x6000:
+        cout << "6 case\n";
+        // set register VX where X is the second hex digit (which we have to bitshift to get the proper value)
+        //      to the value of the last 8 bits
+        V[((opcode & 0x0F00) >> 8)] = opcode & 0x00FF;
+        break;
+    case 0x7000:
+        cout << "7 case\n";
+        V[((opcode & 0x0F00) >> 8)] += opcode & 0x00FF;
+        break;
+    case 0x8000:
+        cout << "8 case\n";
+        break;
+    case 0x9000:
+        cout << "9 case\n";
+        break;
+    case 0xA000:
+        cout << "A case\n";
+        I = last3Hex;
+        break;
+    case 0xB000:
+        cout << "B case\n";
+        break;
+    case 0xC000:
+        cout << "C case\n";
+        break;
+    case 0xD000:
+        cout << "D case\n";
+        break;
+    case 0xE000:
+        cout << "E case\n";
+        break;
+    case 0xF000:
+        cout << "F case\n";
+        break;
+    
+    
+    default:
+        break;
+    }    
+}
+
 Chip8::Chip8()
 {
     cout << "Initializing CPU\n";
@@ -53,22 +136,9 @@ Chip8::Chip8()
 
     
     // Reset registers V0 - VF
-    V0 = 0;
-    V1 = 0;
-    V2 = 0;
-    V3 = 0;
-    V4 = 0;
-    V5 = 0;
-    V6 = 0;
-    V7 = 0;
-    V8 = 0;
-    V9 = 0;
-    VA = 0;
-    VB = 0;
-    VC = 0;
-    VD = 0;
-    VE = 0;
-    VF = 0;
+    for(int i = 0; i < 16; i++){
+        V[i] = 0;
+    }
 
     memset(stack, 0, sizeof(stack));
 

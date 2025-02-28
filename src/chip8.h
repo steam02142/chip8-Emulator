@@ -1,38 +1,26 @@
+#pragma once
 #include <iostream>
 #include <cstdint>
 #include <string.h>
 #include <fstream>
 #include <filesystem>
 #include <vector>
+#include "display.h"
 
 using namespace std;
 
 class Chip8{
     public:
         void loadProgram(string path);
-
+        void fetch(uint16_t& opcode);
+        void decode(uint16_t opcode, SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight]);
         Chip8();
     private:
         // CPU memory
         uint8_t memory[4096];
 
-        // Registers
-        uint8_t V0;
-        uint8_t V1;
-        uint8_t V2;
-        uint8_t V3;
-        uint8_t V4;
-        uint8_t V5;
-        uint8_t V6;
-        uint8_t V7;
-        uint8_t V8;
-        uint8_t V9;
-        uint8_t VA;
-        uint8_t VB;
-        uint8_t VC;
-        uint8_t VD;
-        uint8_t VE;
-        uint8_t VF;
+        // Registers (V0 - VF)
+        uint8_t V[16];
 
         uint16_t I;
         uint8_t delay;
