@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <SDL2/SDL.h>
 
@@ -12,3 +13,5 @@ const int PIXEL_SIZE = 10;
 SDL_Renderer* initializeDisplay();
 
 void drawToScreen(SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight]);
+
+void clearDisplay(SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight]);

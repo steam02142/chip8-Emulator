@@ -1,4 +1,3 @@
-
 #include "display.h"
 
 SDL_Renderer* initializeDisplay()
@@ -31,5 +30,22 @@ void drawToScreen(SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeig
             }
         }
     }
+    SDL_RenderPresent(renderer);
+}
+
+void clearDisplay(SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight])
+{
+    // Set draw colour to black and clear the display
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    // Clear the values of the display
+    for(int x = 0; x < DisplayWidth; x++) {
+        for(int y = 0; y < DisplayHeight; y++) {
+            display[x][y] = 0;
+        }
+    }
+
+    // Render our changes (cleared screen)
     SDL_RenderPresent(renderer);
 }
