@@ -58,23 +58,48 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
 {
     uint16_t firstHex = opcode & 0xF000;
     uint16_t lastHex = opcode & 0x000F;
+    uint16_t last2Hex = opcode & 0x00FF;
     uint16_t last3Hex = opcode & 0x0FFF;
+    uint16_t tempval = 0;
 
     switch (firstHex)
     {
-    case 0x0000: // 00E0 (clear screen)
-        cout << "0 case\n";
-        clearDisplay(renderer, display);
+    case 0x0000: 
+        switch (lastHex)
+        {
+        case 0x0000: // 00E0 (clear screen)
+            cout << "clear screen\n";
+            clearDisplay(renderer, display);
+            break;
+        case 0x000E: // 00EE (return from subroutine)
+            cout << "return from subroutine\n";    
+            PC = stack[stackPointer];
+            stackPointer--;
+            break;
+        
+        default:
+            cout << "UNKNOWN COMMAND IN 0x0000" << endl;
+            break;
+        }
+
         break;
     case 0x1000:
         cout << "1 case, jumping from " << PC << " to " << last3Hex << endl;
         PC = last3Hex;
         break;
     case 0x2000:
-        cout << "2 case\n";
+        cout << "2 case, calling subroutine\n";
+        stack[stackPointer] = PC;
+        stackPointer++;
+        PC = last3Hex;
         break;
-    case 0x3000:
+    case 0x3000: //unsure
         cout << "3 case\n";
+        tempval = V[((opcode & 0x0F00) >> 8)];
+        // Skip instruction if Vx = the second byte in the opcode
+        if (tempval == (opcode & 0x00FF)){
+            PC += 2;
+        }
         break;
     case 0x4000:
         cout << "4 case\n";
@@ -117,6 +142,19 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         break;
     case 0xF000:
         cout << "F case\n";
+        switch (last2Hex)
+        {
+        case 0x0007: // set Vx to delay timer value
+            /* code */
+            break;
+        case 0x0015: // set delay timer to Vx
+            /* code */
+            break;
+        
+        default:
+            break;
+        }
+
         break;
     
     

@@ -1,10 +1,12 @@
 #include "chip8.h"
 #include "display.h"
 #include <SDL2/SDL.h>
-#include <ctime>
+#include <chrono>
+#include <unistd.h>
 
 
 using namespace std;
+using namespace std::chrono;
 
 // The chip8 CPU
 Chip8 chip8;
@@ -18,23 +20,25 @@ bool display[DisplayWidth][DisplayHeight] = {0};
 int main(int argc, char** argv)
 {
     SDL_Renderer* renderer = initializeDisplay();
-    chip8.loadProgram("games/IBM_Logo.ch8");
+    chip8.loadProgram("games/Pong.ch8");
 
-    std::time_t current_time;
+    uint64_t startTime, endTime;
 
     display[0][0] = 1;
     display[1][2] = 1;
 
     drawToScreen(renderer, display);
     //SDL_Delay(500);
-    
+    int sleepDuration = 0;
+    float sixtiethOfASecond = 16.6;
+
     // Perform fetch, execute, decode cycle 660 times per second
     //      (this is the chip8 instructions per second)
     while(true){
-        current_time = std::time(nullptr);
+        startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         
         // Fetch, execute, decode
-        for(int i = 0; i < 1; i++)
+        for(int i = 0; i < 11; i++)
         {
             chip8.fetch(opcode);
             cout << hex << opcode << endl;
@@ -42,8 +46,11 @@ int main(int argc, char** argv)
             drawToScreen(renderer, display);
         }
 
-        // wait until the remainder of 1 second has passed
-        while(current_time == std::time(nullptr));
+        endTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        // wait for 1/60 of a second (minus the time spent performing instructions)
+        sleepDuration = startTime - endTime;
+        // usleep is in microseconds, multiply by 1000 for ms
+        usleep((sixtiethOfASecond - sleepDuration) * 1000);
     }
 
     
