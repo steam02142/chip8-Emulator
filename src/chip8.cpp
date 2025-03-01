@@ -110,6 +110,7 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         break;
     case 0xD000:
         cout << "D case\n";
+        Chip8::display(opcode, display);
         break;
     case 0xE000:
         cout << "E case\n";
@@ -123,6 +124,34 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         break;
     }    
 }
+
+void Chip8::display(uint16_t opcode, bool display[DisplayWidth][DisplayHeight])
+{
+    int x = (opcode & 0x0F00) >> 8;
+    int y = (opcode & 0x00F0) >> 4;
+    int rows = (opcode & 0x000F);
+    uint8_t sprite = 0;
+    int origx = V[x] % DisplayWidth;
+    x = V[x] % DisplayWidth;
+    y = V[y] % DisplayHeight;
+    V[15] = 0;
+    bool bit;
+
+    for(int row = 0; row < rows; row++){
+        sprite = memory[I + row];
+        x = origx;
+        for(int bitShift = 7; bitShift >= 0; bitShift--){
+            if((x <= DisplayWidth) && (y <= DisplayHeight)) {
+                bit = (sprite >> bitShift) & 0b1;
+                display[x][y] = display[x][y] ^ bit;
+                x++;
+            }
+        }
+        y++;
+    }
+
+}
+
 
 Chip8::Chip8()
 {

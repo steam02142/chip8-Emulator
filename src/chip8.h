@@ -14,6 +14,7 @@ class Chip8{
         void loadProgram(string path);
         void fetch(uint16_t& opcode);
         void decode(uint16_t opcode, SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight]);
+        void display(uint16_t opcode, bool display[DisplayWidth][DisplayHeight]);
         Chip8();
     private:
         // CPU memory
