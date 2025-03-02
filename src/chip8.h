@@ -33,3 +33,5 @@ class Chip8{
         uint8_t stackPointer;
         uint16_t PC;
 };
+
+int randomNumber();

@@ -73,8 +73,9 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
             break;
         case 0x000E: // 00EE (return from subroutine)
             cout << "return from subroutine\n";    
-            PC = stack[stackPointer];
             stackPointer--;
+            PC = stack[stackPointer];
+            
             break;
         
         default:
@@ -125,11 +126,51 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         cout << "7 case\n";
         V[((opcode & 0x0F00) >> 8)] += opcode & 0x00FF;
         break;
+    // Math and bitwise operations
     case 0x8000:
         cout << "8 case\n";
+        switch (lastHex)
+        {
+        case 0x0000: // set Vx to delay timer value
+            cout << "TODO\n";
+            break;
+        case 0x0001: // TODO: 
+            cout << "TODO\n";
+            break;
+        case 0x0002: // 
+            cout << "TODO\n";
+            break;
+        case 0x0003: // TODO: 
+            cout << "TODO\n";
+            break;
+        case 0x0004: // TODO:
+            cout << "TODO\n";
+            break;
+        case 0x0005: // 
+            cout << "TODO\n";
+
+            break;
+        case 0x0006: // TODO: 
+            cout << "TODO\n";
+
+            break;
+        case 0x0007: // TODO:
+            cout << "TODO\n";
+            break;
+        case 0x000E: // TODO: 
+            cout << "TODO\n";
+            break;
+
+        
+        default:
+            break;
+        }
         break;
     case 0x9000:
         cout << "9 case\n";
+        if(V[((opcode & 0x0F00) >> 8)] != V[((opcode & 0x00F0) >> 4)]){
+            PC += 2;
+        }
         break;
     case 0xA000:
         cout << "A case\n";
@@ -140,6 +181,9 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         break;
     case 0xC000:
         cout << "C case\n";
+        tempval = randomNumber();
+
+        V[((opcode & 0x0F00) >> 8)] = tempval & (opcode & 0x00FF);
         break;
     case 0xD000:
         cout << "D case\n";
@@ -147,6 +191,19 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         break;
     case 0xE000:
         cout << "E case\n";
+        switch (last2Hex)
+        {
+        case 0x009E: // TODO
+            cout << "TODO\n";
+            break;
+        case 0x00A1: // TODO
+            cout << "TODO\n";
+            break;
+        
+        default:
+            break;
+        }
+
         break;
     case 0xF000:
         cout << "F case\n";
@@ -155,22 +212,17 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         case 0x0007: // set Vx to delay timer value
             V[((opcode & 0x0F00) >> 8)] = delay;
             break;
+        case 0x000A: // TODO: keypress
+            cout << "TODO\n";
+            break;
         case 0x0015: // set delay timer to Vx
             delay = V[((opcode & 0x0F00) >> 8)];
             break;
-        case 0x0033: // Store BCD of 1's, 10's, and 100's
-            tempval = V[((opcode & 0x0F00) >> 8)];
-
-            memory[I] = (tempval / 100) % 10;
-            memory[I + 1] = (tempval / 10) % 10;
-            memory[I + 2] = tempval % 10;
-
+        case 0x0018: // TODO: sound timer
+            cout << "TODO\n";
             break;
-        case 0x0065: // Load X bytes from memory and load them into registers, starting at 0
-            tempval = (opcode & 0x0F00) >> 8;
-            for(int byte = 0; byte <= tempval; byte++){
-                V[byte] = memory[I + byte];
-            }
+        case 0x001E: // TODO:
+            cout << "TODO\n";
             break;
         case 0x0029: // 
             // Left shift then right shift to get rid of 4 greatest bits
@@ -180,6 +232,24 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
             I = V[tempval] * 5;
 
             break;
+        case 0x0033: // Store BCD of 1's, 10's, and 100's
+            tempval = V[((opcode & 0x0F00) >> 8)];
+
+            memory[I] = (tempval / 100) % 10;
+            memory[I + 1] = (tempval / 10) % 10;
+            memory[I + 2] = tempval % 10;
+
+            break;
+        case 0x0055: // TODO:
+            cout << "TODO\n";
+            break;
+        case 0x0065: // Load X bytes from memory and load them into registers, starting at 0
+            tempval = (opcode & 0x0F00) >> 8;
+            for(int byte = 0; byte <= tempval; byte++){
+                V[byte] = memory[I + byte];
+            }
+            break;
+
         
         default:
             break;
@@ -246,4 +316,12 @@ Chip8::Chip8()
 
     delay = 0;
     sound = 0;
+}
+
+// Generate and return a random number from 0-255
+int randomNumber()
+{
+    srand(time(0));
+
+    return rand() % 256;
 }
