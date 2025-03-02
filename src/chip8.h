@@ -16,6 +16,9 @@ class Chip8{
         void decode(uint16_t opcode, SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight]);
         void display(uint16_t opcode, bool display[DisplayWidth][DisplayHeight]);
         Chip8();
+
+        uint8_t delay;
+        uint8_t sound;
     private:
         // CPU memory
         uint8_t memory[4096];
@@ -24,8 +27,7 @@ class Chip8{
         uint8_t V[16];
 
         uint16_t I;
-        uint8_t delay;
-        uint8_t sound;
+
         
         uint16_t stack[16];
         uint8_t stackPointer;

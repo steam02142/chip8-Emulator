@@ -103,9 +103,17 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         break;
     case 0x4000:
         cout << "4 case\n";
+        tempval = V[((opcode & 0x0F00) >> 8)];
+        // Skip instruction if Vx != the second byte in the opcode
+        if (tempval != (opcode & 0x00FF)){
+            PC += 2;
+        }
         break;
     case 0x5000:
         cout << "5 case\n";
+        if(V[((opcode & 0x0F00) >> 8)] == V[((opcode & 0x00F0) >> 4)]){
+            PC += 2;
+        }
         break;
     case 0x6000:
         cout << "6 case\n";
@@ -145,10 +153,32 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         switch (last2Hex)
         {
         case 0x0007: // set Vx to delay timer value
-            /* code */
+            V[((opcode & 0x0F00) >> 8)] = delay;
             break;
         case 0x0015: // set delay timer to Vx
-            /* code */
+            delay = V[((opcode & 0x0F00) >> 8)];
+            break;
+        case 0x0033: // Store BCD of 1's, 10's, and 100's
+            tempval = V[((opcode & 0x0F00) >> 8)];
+
+            memory[I] = (tempval / 100) % 10;
+            memory[I + 1] = (tempval / 10) % 10;
+            memory[I + 2] = tempval % 10;
+
+            break;
+        case 0x0065: // Load X bytes from memory and load them into registers, starting at 0
+            tempval = (opcode & 0x0F00) >> 8;
+            for(int byte = 0; byte <= tempval; byte++){
+                V[byte] = memory[I + byte];
+            }
+            break;
+        case 0x0029: // 
+            // Left shift then right shift to get rid of 4 greatest bits
+            tempval = (opcode & 0x0F00) << 4;
+            tempval = tempval >> 12;
+            // Multiply by 5 because there are 5 bytes per character
+            I = V[tempval] * 5;
+
             break;
         
         default:
