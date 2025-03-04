@@ -22,13 +22,12 @@ int main(int argc, char** argv)
     SDL_Renderer* renderer = initializeDisplay();
     chip8.loadProgram("games/Pong.ch8");
 
+    // Used to track user input
+    SDL_Event event;
+
     uint64_t startTime, endTime;
 
-    // display[0][0] = 1;
-    // display[1][2] = 1;
-
     drawToScreen(renderer, display);
-    //SDL_Delay(500);
     int sleepDuration = 0;
     float sixtiethOfASecond = 16.6;
 
@@ -40,8 +39,9 @@ int main(int argc, char** argv)
         // Fetch, execute, decode
         for(int i = 0; i < 11; i++)
         {
+            chip8.handleInput(event);
             chip8.fetch(opcode);
-            cout << "opcode fetched: " << hex << opcode << endl;
+            //cout << "opcode fetched: " << hex << opcode << endl;
             chip8.decode(opcode, renderer, display);
         }
         drawToScreen(renderer, display);
