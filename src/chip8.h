@@ -5,7 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
-#include <bits/stdc++.h>
+#include <unordered_map>
 #include "display.h"
 
 using namespace std;

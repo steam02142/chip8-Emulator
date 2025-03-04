@@ -69,6 +69,7 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
     uint16_t last3Hex = opcode & 0x0FFF;
     uint16_t tempval = 0;
 
+
     switch (firstHex)
     {
     case 0x0000: 
@@ -135,27 +136,36 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         break;
     // Math and bitwise operations
     case 0x8000:
-        cout << "8 case\n";
         switch (lastHex)
         {
-        case 0x0000: // set Vx to delay timer value
-            cout << "TODO\n";
+        case 0x0000: // Sets Vx = Vy
+            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x00F0) >> 4)];
             break;
-        case 0x0001: // TODO: 
-            cout << "TODO\n";
+        case 0x0001: // Perform bitwise OR on Vx, Vy and store in Vx
+            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] | V[((opcode & 0x00F0) >> 4)];
             break;
-        case 0x0002: // 
-            cout << "TODO\n";
+        case 0x0002: // Perform bitwise AND on Vx, Vy and store in Vx
+            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] & V[((opcode & 0x00F0) >> 4)];
             break;
-        case 0x0003: // TODO: 
-            cout << "TODO\n";
+        case 0x0003: // Perform bitwise XOR on Vx, Vy and store in Vx
+            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] ^ V[((opcode & 0x00F0) >> 4)];
             break;
-        case 0x0004: // TODO:
-            cout << "TODO\n";
+        case 0x0004: // Sets Vx = Vx + Vy, if overflow set VF to 1, otherwise 0
+            tempval = V[((opcode & 0x0F00) >> 8)] + V[((opcode & 0x00F0) >> 4)];
+            V[((opcode & 0x0F00) >> 8)] = tempval;
+            if(tempval > 255){
+                V[15] = 1;
+            } else {
+                V[15] = 0;
+            }
             break;
-        case 0x0005: // 
+        case 0x0005: // Sets Vx = Vx - Vy, if Vx > Vy set VF to 1
             cout << "TODO\n";
-
+            V[15] = 0;
+            if (V[((opcode & 0x0F00) >> 8)] > V[((opcode & 0x00F0) >> 4)]){
+                V[15] = 1;
+            }
+            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] - V[((opcode & 0x00F0) >> 4)];
             break;
         case 0x0006: // TODO: 
             cout << "TODO\n";
@@ -197,15 +207,13 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
     case 0xE000:
         switch (last2Hex)
         {
-        case 0x009E: // TODO
-            cout << "TODO\n";
+        case 0x009E: // unsure
             tempval = V[((opcode & 0x0F00) >> 8)];
             if(keysPressed[tempval]){
                 PC += 2;
             }
             break;
-        case 0x00A1: // TODO
-            cout << "TODO\n";
+        case 0x00A1: // unsure
             tempval = V[((opcode & 0x0F00) >> 8)];
             if(!keysPressed[tempval]){
                 PC += 2;
@@ -229,8 +237,8 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         case 0x0015: // set delay timer to Vx
             delay = V[((opcode & 0x0F00) >> 8)];
             break;
-        case 0x0018: // TODO: sound timer
-            cout << "TODO\n";
+        case 0x0018: // set sound timer to Vx
+            sound = V[((opcode & 0x0F00) >> 8)];
             break;
         case 0x001E: // TODO:
             cout << "TODO\n";
@@ -289,8 +297,8 @@ void Chip8::display(uint16_t opcode, bool display[DisplayWidth][DisplayHeight])
     for(int row = 0; row < rows; row++){
         sprite = memory[I + row];
         x = origx;
-        for(int bitShift = 7; bitShift >= 0; bitShift--){
-            if((x <= DisplayWidth) && (y <= DisplayHeight)) {
+        for(int bitShift = 7; bitShift > 0; bitShift--){
+            if((x < DisplayWidth) && (y < DisplayHeight)) {
                 bit = (sprite >> bitShift) & 0b1;
                 display[x][y] = display[x][y] ^ bit;
                 x++;
@@ -358,7 +366,9 @@ void Chip8::handleInput(SDL_Event event)
 // Takes a key and a value to set it to
 void Chip8::storeInput(const char* key, bool value)
 {
-    unordered_map<char, uint8_t>::const_iterator chip8Key = keymap.find(*key);
+    char betKey = *key;
+
+    unordered_map<char, uint8_t>::const_iterator chip8Key = keymap.find(betKey);
 
     if(chip8Key != keymap.end()){
         keysPressed[chip8Key->second] = value;
