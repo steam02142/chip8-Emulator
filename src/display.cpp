@@ -22,7 +22,7 @@ void drawToScreen(SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeig
 
     for(int x = 0; x < DisplayWidth; x++) {
         for(int y = 0; y < DisplayHeight; y++) {
-            if(display[x][y]) { // if the pixel is on
+            if(display[x][y]) { // if the pixel should be set to on
                 xcoord = x * PIXEL_SIZE;
                 ycoord = y * PIXEL_SIZE;
                 SDL_Rect pixel = {xcoord, ycoord, PIXEL_SIZE, PIXEL_SIZE};

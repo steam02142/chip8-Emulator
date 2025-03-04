@@ -160,7 +160,6 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
             }
             break;
         case 0x0005: // Sets Vx = Vx - Vy, if Vx > Vy set VF to 1
-            cout << "TODO\n";
             V[15] = 0;
             if (V[((opcode & 0x0F00) >> 8)] > V[((opcode & 0x00F0) >> 4)]){
                 V[15] = 1;
@@ -172,7 +171,11 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
 
             break;
         case 0x0007: // TODO:
-            cout << "TODO\n";
+            V[15] = 0;
+            if (V[((opcode & 0x00F0) >> 4)] > V[((opcode & 0x0F00) >> 8)]){
+                V[15] = 1;
+            }
+            V[((opcode & 0x0F00) >> 8)] =  V[((opcode & 0x00F0) >> 4)] - V[((opcode & 0x0F00) >> 8)];
             break;
         case 0x000E: // TODO: 
             cout << "TODO\n";
@@ -232,7 +235,12 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
             V[((opcode & 0x0F00) >> 8)] = delay;
             break;
         case 0x000A: // TODO: keypress
-            cout << "TODO\n";
+            tempval = checkForKeypress();
+            if(tempval == 255){
+                PC -=2;
+            } else{
+                V[((opcode & 0x0F00) >> 8)] = tempval;
+            }
             break;
         case 0x0015: // set delay timer to Vx
             delay = V[((opcode & 0x0F00) >> 8)];
@@ -240,8 +248,8 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         case 0x0018: // set sound timer to Vx
             sound = V[((opcode & 0x0F00) >> 8)];
             break;
-        case 0x001E: // TODO:
-            cout << "TODO\n";
+        case 0x001E: // Set I = Vx + I
+            I = V[((opcode & 0x0F00) >> 8)] + I;
             break;
         case 0x0029: // 
             // Left shift then right shift to get rid of 4 greatest bits
@@ -373,4 +381,15 @@ void Chip8::storeInput(const char* key, bool value)
     if(chip8Key != keymap.end()){
         keysPressed[chip8Key->second] = value;
     }
+}
+
+uint8_t Chip8::checkForKeypress()
+{
+    for(int i = 0; i < 16; i++){
+        if(keysPressed[i]){
+            return i;
+        }
+    }
+    // No key way pressed or it was not valid
+    return 255;
 }

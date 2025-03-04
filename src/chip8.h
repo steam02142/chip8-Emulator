@@ -20,6 +20,7 @@ class Chip8{
         void display(uint16_t opcode, bool display[DisplayWidth][DisplayHeight]);
         void handleInput(SDL_Event event);
         void storeInput(const char* key, bool value);
+        uint8_t checkForKeypress();
         Chip8();
 
         uint8_t delay;
