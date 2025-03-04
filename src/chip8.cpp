@@ -22,6 +22,13 @@ uint8_t font[FONT_ARRAY_SIZE] = {0xF0, 0x90, 0x90, 0x90, 0xF0,
 0xF0, 0x80, 0xF0, 0x80, 0xF0, 
 0xF0, 0x80, 0xF0, 0x80, 0x80  };
 
+unordered_map<char, uint8_t> keymap = {
+    {'1', 0x1}, {'2', 0x2}, {'3', 0x3}, {'4', 0xC},
+    {'Q', 0x4}, {'W', 0x5}, {'E', 0x6}, {'R', 0xD},
+    {'A', 0x7}, {'S', 0x8}, {'D', 0x9}, {'F', 0xE},
+    {'Z', 0xA}, {'X', 0x0}, {'C', 0xB}, {'V', 0xF}
+};
+
 // Loads a program at 'path' to memory at location 0x200
 void Chip8::loadProgram(string path)
 {
@@ -192,10 +199,17 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         {
         case 0x009E: // TODO
             cout << "TODO\n";
+            tempval = V[((opcode & 0x0F00) >> 8)];
+            if(keysPressed[tempval]){
+                PC += 2;
+            }
             break;
         case 0x00A1: // TODO
             cout << "TODO\n";
-            
+            tempval = V[((opcode & 0x0F00) >> 8)];
+            if(!keysPressed[tempval]){
+                PC += 2;
+            }
             break;
         
         default:
@@ -344,59 +358,9 @@ void Chip8::handleInput(SDL_Event event)
 // Takes a key and a value to set it to
 void Chip8::storeInput(const char* key, bool value)
 {
-    switch (*key)
-    {
-    case '1':
-        keysPressed[0] = value;
-        break;
-    case '2':
-        keysPressed[1] = value;
-        break;
-    case '3':
-        keysPressed[2] = value;
-        break;
-    case '4':
-        keysPressed[3] = value;
-        break;
-    case 'Q':
-        keysPressed[4] = value;
-        break;
-    case 'W':
-        keysPressed[5] = value;
-        break;
-    case 'E':
-        keysPressed[6] = value;
-        break;
-    case 'R':
-        keysPressed[7] = value;
-        break;
-    case 'A':
-        keysPressed[8] = value;
-        break;
-    case 'S':
-        keysPressed[9] = value;
-        break;
-    case 'D':
-        keysPressed[10] = value;
-        break;
-    case 'F':
-        keysPressed[11] = value;
-        break;
-    case 'Z':
-        keysPressed[12] = value;
-        break;
-    case 'X':
-        keysPressed[13] = value;
-        break;
-    case 'C':
-        keysPressed[14] = value;
-        break;
-    case 'V':
-        keysPressed[15] = value;
-        break;
-    
-    
-    default:
-        break;
+    unordered_map<char, uint8_t>::const_iterator chip8Key = keymap.find(*key);
+
+    if(chip8Key != keymap.end()){
+        keysPressed[chip8Key->second] = value;
     }
 }

@@ -5,6 +5,7 @@
 #include <fstream>
 #include <filesystem>
 #include <vector>
+#include <bits/stdc++.h>
 #include "display.h"
 
 using namespace std;
