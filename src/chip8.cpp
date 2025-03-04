@@ -306,7 +306,7 @@ void Chip8::display(uint16_t opcode, bool display[DisplayWidth][DisplayHeight])
     for(int row = 0; row < rows; row++){
         sprite = memory[I + row];
         x = origx;
-        for(int bitShift = 7; bitShift > 0; bitShift--){
+        for(int bitShift = 7; bitShift >= 0; bitShift--){
             if((x < DisplayWidth) && (y < DisplayHeight)) {
                 bit = (sprite >> bitShift) & 0b1;
                 prevState = display[x][y];
