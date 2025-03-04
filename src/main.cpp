@@ -44,14 +44,14 @@ int main(int argc, char** argv)
             //cout << "opcode fetched: " << hex << opcode << endl;
             chip8.decode(opcode, renderer, display);
         }
-        
+
         drawToScreen(renderer, display);
 
         endTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         // wait for 1/60 of a second (minus the time spent performing instructions)
         sleepDuration = endTime - startTime;
         // usleep is in microseconds, multiply by 1000 for ms
-        usleep((sixtiethOfASecond - sleepDuration) * 10);
+        usleep((sixtiethOfASecond - sleepDuration) * 1000);
         chip8.delay--;
         chip8.sound--;
     }
