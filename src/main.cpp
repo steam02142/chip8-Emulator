@@ -1,7 +1,5 @@
 #include "chip8.h"
 #include "display.h"
-#include <SDL2/SDL.h>
-#include <chrono>
 #include <unistd.h>
 
 

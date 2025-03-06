@@ -1,5 +1,4 @@
 #include "chip8.h"
-#include <bitset>
 
 const int FONT_ARRAY_SIZE = 80;
 
@@ -22,6 +21,7 @@ uint8_t font[FONT_ARRAY_SIZE] = {0xF0, 0x90, 0x90, 0x90, 0xF0,
 0xF0, 0x80, 0xF0, 0x80, 0xF0, 
 0xF0, 0x80, 0xF0, 0x80, 0x80  };
 
+// Mapping of modern day keyboard keys to chip8 keyboard configuration
 unordered_map<char, uint8_t> keymap = {
     {'1', 0x1}, {'2', 0x2}, {'3', 0x3}, {'4', 0xC},
     {'Q', 0x4}, {'W', 0x5}, {'E', 0x6}, {'R', 0xD},
@@ -40,7 +40,7 @@ void Chip8::loadProgram(string path)
     long fileSize = filesystem::file_size(path);
     cout << "File size: " << fileSize << endl;
 
-    // Get the bytes of the game
+    // Get the number of bytes of the game
     char buffer [fileSize];
     memset(buffer, 0, sizeof(buffer));
     game.read(buffer, fileSize);
@@ -58,11 +58,13 @@ void Chip8::fetch(uint16_t& opcode)
     opcode = opcode << 8;
     opcode = opcode | memory[PC + 1];
     PC += 2;
-
 }
 
 void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight])
 {
+    uint16_t x = ((opcode & 0x0F00) >> 8);
+    uint16_t y = ((opcode & 0x00F0) >> 4);
+
     uint16_t firstHex = opcode & 0xF000;
     uint16_t lastHex = opcode & 0x000F;
     uint16_t last2Hex = opcode & 0x00FF;
@@ -75,84 +77,74 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
     case 0x0000: 
         switch (lastHex)
         {
-        case 0x0000: // 00E0 (clear screen)
-
+        case 0x0000:
             clearDisplay(renderer, display);
             break;
         case 0x000E: // 00EE (return from subroutine)
-
             stackPointer--;
             PC = stack[stackPointer];
-            
             break;
         
         default:
-            cout << "UNKNOWN COMMAND IN 0x0000" << endl;
+            cout << "INVALID INSTRUCTION" << endl;
             break;
         }
 
         break;
     case 0x1000:
-
         PC = last3Hex;
         break;
     case 0x2000:
-
         stack[stackPointer] = PC;
         stackPointer++;
         PC = last3Hex;
         break;
     case 0x3000: 
-
-        tempval = V[((opcode & 0x0F00) >> 8)];
+        tempval = V[x];
         // Skip instruction if Vx = the second byte in the opcode
         if (tempval == (opcode & 0x00FF)){
             PC += 2;
         }
         break;
     case 0x4000:
-
-        tempval = V[((opcode & 0x0F00) >> 8)];
+        tempval = V[x];
         // Skip instruction if Vx != the second byte in the opcode
         if (tempval != (opcode & 0x00FF)){
             PC += 2;
         }
         break;
     case 0x5000:
-
-        if(V[((opcode & 0x0F00) >> 8)] == V[((opcode & 0x00F0) >> 4)]){
+        if(V[x] == V[y]){
             PC += 2;
         }
         break;
     case 0x6000:
-
         // set register VX where X is the second hex digit (which we have to bitshift to get the proper value)
         //      to the value of the last 8 bits
-        V[((opcode & 0x0F00) >> 8)] = opcode & 0x00FF;
+        V[x] = opcode & 0x00FF;
         break;
     case 0x7000:
-
-        V[((opcode & 0x0F00) >> 8)] += opcode & 0x00FF;
+        V[x] += opcode & 0x00FF;
         break;
     // Math and bitwise operations
     case 0x8000:
         switch (lastHex)
         {
         case 0x0000: // Sets Vx = Vy
-            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x00F0) >> 4)];
+            V[x] = V[y];
             break;
         case 0x0001: // Perform bitwise OR on Vx, Vy and store in Vx
-            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] | V[((opcode & 0x00F0) >> 4)];
+            V[x] = V[x] | V[y];
             break;
         case 0x0002: // Perform bitwise AND on Vx, Vy and store in Vx
-            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] & V[((opcode & 0x00F0) >> 4)];
+            V[x] = V[x] & V[y];
             break;
         case 0x0003: // Perform bitwise XOR on Vx, Vy and store in Vx
-            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] ^ V[((opcode & 0x00F0) >> 4)];
+            V[x] = V[x] ^ V[y];
             break;
         case 0x0004: // Sets Vx = Vx + Vy, if overflow set VF to 1, otherwise 0
-            tempval = V[((opcode & 0x0F00) >> 8)] + V[((opcode & 0x00F0) >> 4)];
-            V[((opcode & 0x0F00) >> 8)] = tempval;
+            tempval = V[x] + V[y];
+            V[x] = tempval;
             if(tempval > 255){
                 V[15] = 1;
             } else {
@@ -161,33 +153,42 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
             break;
         case 0x0005: // Sets Vx = Vx - Vy, if Vx > Vy set VF to 1
             V[15] = 0;
-            if (V[((opcode & 0x0F00) >> 8)] > V[((opcode & 0x00F0) >> 4)]){
+            if (V[x] > V[y]){
                 V[15] = 1;
             }
-            V[((opcode & 0x0F00) >> 8)] = V[((opcode & 0x0F00) >> 8)] - V[((opcode & 0x00F0) >> 4)];
+            V[x] = V[x] - V[y];
             break;
         case 0x0006: // TODO: 
             cout << "TODO\n";
-
-            break;
-        case 0x0007: // TODO:
+            tempval = V[x];
             V[15] = 0;
-            if (V[((opcode & 0x00F0) >> 4)] > V[((opcode & 0x0F00) >> 8)]){
+            // Perform bitwise and to check if LSB is 1
+            if(tempval & 1){
                 V[15] = 1;
             }
-            V[((opcode & 0x0F00) >> 8)] =  V[((opcode & 0x00F0) >> 4)] - V[((opcode & 0x0F00) >> 8)];
+            V[x] = tempval / 2;
+            break;
+        case 0x0007: // TODO:
+            if (V[y] > V[x]){
+                V[15] = 1;
+            }
+            V[x] =  V[y] - V[x];
             break;
         case 0x000E: // TODO: 
-            cout << "TODO\n";
+            tempval = V[x];
+            V[15] = 0;
+            // Perform bitwise and to check if LSB is 1
+            if((tempval >> 7) & 1){
+                V[15] = 1;
+            }
+            V[x] = tempval * 2;
             break;
-
-        
         default:
             break;
         }
         break;
     case 0x9000:
-        if(V[((opcode & 0x0F00) >> 8)] != V[((opcode & 0x00F0) >> 4)]){
+        if(V[x] != V[y]){
             PC += 2;
         }
         break;
@@ -196,12 +197,12 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         I = last3Hex;
         break;
     case 0xB000:
-        cout << "B case\n";
+        PC = last3Hex + V[0];
         break;
     case 0xC000:
         tempval = randomNumber();
 
-        V[((opcode & 0x0F00) >> 8)] = tempval & (opcode & 0x00FF);
+        V[x] = tempval & (opcode & 0x00FF);
         break;
     case 0xD000:
 
@@ -211,13 +212,13 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         switch (last2Hex)
         {
         case 0x009E: // unsure
-            tempval = V[((opcode & 0x0F00) >> 8)];
+            tempval = V[x];
             if(keysPressed[tempval]){
                 PC += 2;
             }
             break;
         case 0x00A1: // unsure
-            tempval = V[((opcode & 0x0F00) >> 8)];
+            tempval = V[x];
             if(!keysPressed[tempval]){
                 PC += 2;
             }
@@ -232,24 +233,24 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
         switch (last2Hex)
         {
         case 0x0007: // set Vx to delay timer value
-            V[((opcode & 0x0F00) >> 8)] = delay;
+            V[x] = delay;
             break;
         case 0x000A: // TODO: keypress
             tempval = checkForKeypress();
             if(tempval == 255){
                 PC -=2;
             } else{
-                V[((opcode & 0x0F00) >> 8)] = tempval;
+                V[x] = tempval;
             }
             break;
         case 0x0015: // set delay timer to Vx
-            delay = V[((opcode & 0x0F00) >> 8)];
+            delay = V[x];
             break;
         case 0x0018: // set sound timer to Vx
-            sound = V[((opcode & 0x0F00) >> 8)];
+            sound = V[x];
             break;
         case 0x001E: // Set I = Vx + I
-            I = V[((opcode & 0x0F00) >> 8)] + I;
+            I = V[x] + I;
             break;
         case 0x0029: // 
             // Left shift then right shift to get rid of 4 greatest bits
@@ -260,7 +261,7 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
 
             break;
         case 0x0033: // Store BCD of 1's, 10's, and 100's
-            tempval = V[((opcode & 0x0F00) >> 8)];
+            tempval = V[x];
 
             memory[I] = (tempval / 100) % 10;
             memory[I + 1] = (tempval / 10) % 10;
@@ -268,7 +269,7 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
 
             break;
         case 0x0055: // The values in V0 to Vx are stored in memory starting at I, then I + 1
-            for(int i = 0; i <= ((opcode & 0x0F00) >> 8); i++){
+            for(int i = 0; i <= x; i++){
                 memory[I + i] = V[i];
             }
             break;

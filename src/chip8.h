@@ -4,7 +4,7 @@
 #include <string.h>
 #include <fstream>
 #include <filesystem>
-#include <vector>
+#include <bitset>
 #include <unordered_map>
 #include "display.h"
 
