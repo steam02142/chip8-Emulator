@@ -2,7 +2,6 @@
 #include "display.h"
 #include <unistd.h>
 
-
 using namespace std;
 using namespace std::chrono;
 
@@ -29,9 +28,19 @@ int main(int argc, char** argv)
     int sleepDuration = 0;
     float sixtiethOfASecond = 16.6;
 
+    bool running = true;
+
     // Perform fetch, execute, decode cycle 660 times per second
     //      (this is the chip8 instructions per second)
-    while(true){
+    while(running){
+        while( SDL_PollEvent( &event ) )
+        {
+            if( event.type == SDL_QUIT )
+            {
+                running = false;
+            }    
+        }
+
         startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         
         // Fetch, execute, decode
@@ -39,7 +48,6 @@ int main(int argc, char** argv)
         {
             chip8.handleInput(event);
             chip8.fetch(opcode);
-            cout << "opcode fetched: " << hex << opcode << endl;
             chip8.decode(opcode, renderer, display);
         }
 
@@ -48,17 +56,16 @@ int main(int argc, char** argv)
         endTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         // wait for 1/60 of a second (minus the time spent performing instructions)
         sleepDuration = endTime - startTime;
-        // usleep is in microseconds, multiply by 1000 for ms
         usleep((sixtiethOfASecond - sleepDuration) * 1000);
         chip8.delay--;
         chip8.sound--;
+
     }
 
+    SDL_DestroyRenderer(renderer);
+    SDL_Quit();
     
-
-    SDL_RenderClear(renderer);
-    SDL_RenderPresent(renderer);
-    SDL_Delay(3000);
+   
 
     return 0;
 }
