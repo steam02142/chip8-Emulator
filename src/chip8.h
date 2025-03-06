@@ -39,6 +39,24 @@ class Chip8{
         uint16_t stack[16];
         uint8_t stackPointer;
         uint16_t PC;
+
+        void handleOpcode0(uint16_t opcode, SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight]);
+        void handleOpcode1(uint16_t opcode);
+        void handleOpcode2(uint16_t opcode);
+        void handleOpcode3(uint16_t opcode, uint16_t x);
+        void handleOpcode4(uint16_t opcode, uint16_t x);
+        void handleOpcode5(uint16_t opcode, uint16_t x, uint16_t y);
+        void handleOpcode6(uint16_t opcode, uint16_t x);
+        void handleOpcode7(uint16_t opcode, uint16_t x);
+        void handleOpcode8(uint16_t opcode, uint16_t x, uint16_t y);
+        void handleOpcode9(uint16_t opcode, uint16_t x, uint16_t y);
+        void handleOpcodeA(uint16_t opcode);
+        void handleOpcodeB(uint16_t opcode);
+        void handleOpcodeC(uint16_t opcode, uint16_t x);
+        void handleOpcodeD(uint16_t opcode, bool display[DisplayWidth][DisplayHeight]);
+        void handleOpcodeE(uint16_t opcode, uint16_t x);
+        void handleOpcodeF(uint16_t opcode, uint16_t x);
+
 };
 
 int randomNumber();

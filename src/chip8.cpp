@@ -64,228 +64,59 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
 {
     uint16_t x = ((opcode & 0x0F00) >> 8);
     uint16_t y = ((opcode & 0x00F0) >> 4);
-
     uint16_t firstHex = opcode & 0xF000;
-    uint16_t lastHex = opcode & 0x000F;
-    uint16_t last2Hex = opcode & 0x00FF;
-    uint16_t last3Hex = opcode & 0x0FFF;
-    uint16_t tempval = 0;
-
 
     switch (firstHex)
     {
     case 0x0000: 
-        switch (lastHex)
-        {
-        case 0x0000:
-            clearDisplay(renderer, display);
-            break;
-        case 0x000E: // 00EE (return from subroutine)
-            stackPointer--;
-            PC = stack[stackPointer];
-            break;
-        
-        default:
-            cout << "INVALID INSTRUCTION" << endl;
-            break;
-        }
-
+        handleOpcode0(opcode, renderer, display);
         break;
     case 0x1000:
-        PC = last3Hex;
+        handleOpcode1(opcode);
         break;
     case 0x2000:
-        stack[stackPointer] = PC;
-        stackPointer++;
-        PC = last3Hex;
+        handleOpcode2(opcode);
         break;
     case 0x3000: 
-        tempval = V[x];
-        // Skip instruction if Vx = the second byte in the opcode
-        if (tempval == (opcode & 0x00FF)){
-            PC += 2;
-        }
+        handleOpcode3(opcode, x);
         break;
     case 0x4000:
-        tempval = V[x];
-        // Skip instruction if Vx != the second byte in the opcode
-        if (tempval != (opcode & 0x00FF)){
-            PC += 2;
-        }
+        handleOpcode4(opcode, x);
         break;
     case 0x5000:
-        if(V[x] == V[y]){
-            PC += 2;
-        }
+        handleOpcode5(opcode, x, y);
         break;
     case 0x6000:
-        // set register VX where X is the second hex digit (which we have to bitshift to get the proper value)
-        //      to the value of the last 8 bits
-        V[x] = opcode & 0x00FF;
+        handleOpcode6(opcode, x);
         break;
     case 0x7000:
-        V[x] += opcode & 0x00FF;
+        handleOpcode7(opcode, x);
         break;
     // Math and bitwise operations
     case 0x8000:
-        switch (lastHex)
-        {
-        case 0x0000: // Sets Vx = Vy
-            V[x] = V[y];
-            break;
-        case 0x0001: // Perform bitwise OR on Vx, Vy and store in Vx
-            V[x] = V[x] | V[y];
-            break;
-        case 0x0002: // Perform bitwise AND on Vx, Vy and store in Vx
-            V[x] = V[x] & V[y];
-            break;
-        case 0x0003: // Perform bitwise XOR on Vx, Vy and store in Vx
-            V[x] = V[x] ^ V[y];
-            break;
-        case 0x0004: // Sets Vx = Vx + Vy, if overflow set VF to 1, otherwise 0
-            tempval = V[x] + V[y];
-            V[x] = tempval;
-            if(tempval > 255){
-                V[15] = 1;
-            } else {
-                V[15] = 0;
-            }
-            break;
-        case 0x0005: // Sets Vx = Vx - Vy, if Vx > Vy set VF to 1
-            V[15] = 0;
-            if (V[x] > V[y]){
-                V[15] = 1;
-            }
-            V[x] = V[x] - V[y];
-            break;
-        case 0x0006: // TODO: 
-            cout << "TODO\n";
-            tempval = V[x];
-            V[15] = 0;
-            // Perform bitwise and to check if LSB is 1
-            if(tempval & 1){
-                V[15] = 1;
-            }
-            V[x] = tempval / 2;
-            break;
-        case 0x0007: // TODO:
-            if (V[y] > V[x]){
-                V[15] = 1;
-            }
-            V[x] =  V[y] - V[x];
-            break;
-        case 0x000E: // TODO: 
-            tempval = V[x];
-            V[15] = 0;
-            // Perform bitwise and to check if LSB is 1
-            if((tempval >> 7) & 1){
-                V[15] = 1;
-            }
-            V[x] = tempval * 2;
-            break;
-        default:
-            break;
-        }
+        handleOpcode8(opcode, x, y);
         break;
     case 0x9000:
-        if(V[x] != V[y]){
-            PC += 2;
-        }
+        handleOpcode9(opcode, x, y);
         break;
     case 0xA000:
-
-        I = last3Hex;
+        handleOpcodeA(opcode);
         break;
     case 0xB000:
-        PC = last3Hex + V[0];
+        handleOpcodeB(opcode);
         break;
     case 0xC000:
-        tempval = randomNumber();
-
-        V[x] = tempval & (opcode & 0x00FF);
+        handleOpcodeC(opcode, x);
         break;
     case 0xD000:
-
-        Chip8::display(opcode, display);
+        handleOpcodeD(opcode, display);
         break;
     case 0xE000:
-        switch (last2Hex)
-        {
-        case 0x009E: // unsure
-            tempval = V[x];
-            if(keysPressed[tempval]){
-                PC += 2;
-            }
-            break;
-        case 0x00A1: // unsure
-            tempval = V[x];
-            if(!keysPressed[tempval]){
-                PC += 2;
-            }
-            break;
-        
-        default:
-            break;
-        }
-
+        handleOpcodeE(opcode, x);
         break;
     case 0xF000:
-        switch (last2Hex)
-        {
-        case 0x0007: // set Vx to delay timer value
-            V[x] = delay;
-            break;
-        case 0x000A: // TODO: keypress
-            tempval = checkForKeypress();
-            if(tempval == 255){
-                PC -=2;
-            } else{
-                V[x] = tempval;
-            }
-            break;
-        case 0x0015: // set delay timer to Vx
-            delay = V[x];
-            break;
-        case 0x0018: // set sound timer to Vx
-            sound = V[x];
-            break;
-        case 0x001E: // Set I = Vx + I
-            I = V[x] + I;
-            break;
-        case 0x0029: // 
-            // Left shift then right shift to get rid of 4 greatest bits
-            tempval = (opcode & 0x0F00) << 4;
-            tempval = tempval >> 12;
-            // Multiply by 5 because there are 5 bytes per character
-            I = V[tempval] * 5;
-
-            break;
-        case 0x0033: // Store BCD of 1's, 10's, and 100's
-            tempval = V[x];
-
-            memory[I] = (tempval / 100) % 10;
-            memory[I + 1] = (tempval / 10) % 10;
-            memory[I + 2] = tempval % 10;
-
-            break;
-        case 0x0055: // The values in V0 to Vx are stored in memory starting at I, then I + 1
-            for(int i = 0; i <= x; i++){
-                memory[I + i] = V[i];
-            }
-            break;
-        case 0x0065: // Load X bytes from memory and load them into registers, starting at 0
-            tempval = (opcode & 0x0F00) >> 8;
-            for(int byte = 0; byte <= tempval; byte++){
-                V[byte] = memory[I + byte];
-            }
-            break;
-        default:
-            break;
-        }
-
+        handleOpcodeF(opcode, x);
         break;
-    
-    
     default:
         break;
     }    
@@ -324,8 +155,6 @@ void Chip8::display(uint16_t opcode, bool display[DisplayWidth][DisplayHeight])
 
 }
 
-
-
 Chip8::Chip8()
 {
     cout << "Initializing CPU\n";
@@ -362,9 +191,9 @@ int randomNumber()
     return rand() % 256;
 }
 
+// Polls for keypress
 void Chip8::handleInput(SDL_Event event)
 {
-
     SDL_PollEvent(&event);
 
     if (event.type == SDL_KEYDOWN) {
@@ -375,16 +204,12 @@ void Chip8::handleInput(SDL_Event event)
     if (event.type == SDL_KEYUP) {
         storeInput(SDL_GetKeyName(event.key.keysym.sym), false);
     }
-
-
 }
 
-// Takes a key and a value to set it to
+// Stores keypress in bool array in the position that matches the key
 void Chip8::storeInput(const char* key, bool value)
 {
-    char betKey = *key;
-
-    unordered_map<char, uint8_t>::const_iterator chip8Key = keymap.find(betKey);
+    unordered_map<char, uint8_t>::const_iterator chip8Key = keymap.find(*key);
 
     if(chip8Key != keymap.end()){
         keysPressed[chip8Key->second] = value;
@@ -400,4 +225,244 @@ uint8_t Chip8::checkForKeypress()
     }
     // No key way pressed or it was not valid
     return 255;
+}
+
+void Chip8::handleOpcode0(uint16_t opcode, SDL_Renderer* renderer, bool display[DisplayWidth][DisplayHeight])
+{
+    uint16_t lastHex = opcode & 0x000F;
+    switch (lastHex)
+        {
+        case 0x0000:
+            clearDisplay(renderer, display);
+            break;
+        case 0x000E: // 00EE (return from subroutine)
+            stackPointer--;
+            PC = stack[stackPointer];
+            break;
+        
+        default:
+            cout << "INVALID INSTRUCTION" << endl;
+            break;
+        }
+}
+
+void Chip8::handleOpcode1(uint16_t opcode)
+{
+    uint16_t last3Hex = opcode & 0x0FFF;
+    PC = last3Hex;
+}
+
+void Chip8::handleOpcode2(uint16_t opcode)
+{
+    uint16_t last3Hex = opcode & 0x0FFF;
+    stack[stackPointer] = PC;
+    stackPointer++;
+    PC = last3Hex;
+}
+
+void Chip8::handleOpcode3(uint16_t opcode, uint16_t x)
+{
+    // Skip instruction if Vx = the second byte in the opcode
+    if (V[x] == (opcode & 0x00FF)){
+        PC += 2;
+    }
+}
+
+void Chip8::handleOpcode4(uint16_t opcode, uint16_t x)
+{
+    // Skip instruction if Vx != the second byte in the opcode
+    if (V[x] != (opcode & 0x00FF)){
+        PC += 2;
+    }
+}
+
+void Chip8::handleOpcode5(uint16_t opcode, uint16_t x, uint16_t y)
+{
+    if(V[x] == V[y]){
+        PC += 2;
+    }
+}
+
+void Chip8::handleOpcode6(uint16_t opcode, uint16_t x)
+{
+    // set register VX where X is the second hex digit (which we have to bitshift to get the proper value)
+    //      to the value of the last 8 bits
+    V[x] = opcode & 0x00FF;
+}
+
+void Chip8::handleOpcode7(uint16_t opcode, uint16_t x)
+{
+    V[x] += opcode & 0x00FF;
+}
+
+void Chip8::handleOpcode8(uint16_t opcode, uint16_t x, uint16_t y)
+{
+    uint16_t lastHex = opcode & 0x000F;
+    uint8_t F = 15;
+    switch (lastHex)
+        {
+        case 0x0000: // Sets Vx = Vy
+            V[x] = V[y];
+            break;
+        case 0x0001: // Perform bitwise OR on Vx, Vy and store in Vx
+            V[x] = V[x] | V[y];
+            break;
+        case 0x0002: // Perform bitwise AND on Vx, Vy and store in Vx
+            V[x] = V[x] & V[y];
+            break;
+        case 0x0003: // Perform bitwise XOR on Vx, Vy and store in Vx
+            V[x] = V[x] ^ V[y];
+            break;
+        case 0x0004: // Sets Vx = Vx + Vy, if overflow set VF to 1, otherwise 0
+            V[x] = V[x] + V[y];
+
+            if(V[x] > 255){
+                V[F] = 1;
+            } else {
+                V[F] = 0;
+            }
+            break;
+        case 0x0005: // Sets Vx = Vx - Vy, if Vx > Vy set VF to 1
+            V[F] = 0;
+            if (V[x] > V[y]){
+                V[F] = 1;
+            }
+            V[x] = V[x] - V[y];
+            break;
+        case 0x0006: // TODO: 
+            V[F] = 0;
+            // Perform bitwise and to check if LSB is 1
+            if(V[x] & 1){
+                V[15] = 1;
+            }
+            V[x] = V[x] / 2;
+            break;
+        case 0x0007: 
+            if (V[y] > V[x]){
+                V[F] = 1;
+            }
+            V[x] =  V[y] - V[x];
+            break;
+        case 0x000E:  
+            V[F] = 0;
+            // Perform bitwise and to check if LSB is 1
+            if((V[x] >> 7) & 1){
+                V[F] = 1;
+            }
+            V[x] = V[x] * 2;
+            break;
+        default:
+            break;
+        }
+}
+
+void Chip8::handleOpcode9(uint16_t opcode, uint16_t x, uint16_t y)
+{
+    if(V[x] != V[y]){
+        PC += 2;
+    }
+}
+
+void Chip8::handleOpcodeA(uint16_t opcode)
+{
+    uint16_t last3Hex = opcode & 0x0FFF;
+    I = last3Hex;
+}
+
+void Chip8::handleOpcodeB(uint16_t opcode)
+{
+    uint16_t last3Hex = opcode & 0x0FFF;
+    PC = last3Hex + V[0];
+}
+
+void Chip8::handleOpcodeC(uint16_t opcode, uint16_t x)
+{
+    uint8_t randNum = randomNumber();
+    V[x] = randNum & (opcode & 0x00FF);
+}
+
+void Chip8::handleOpcodeD(uint16_t opcode, bool display[DisplayWidth][DisplayHeight])
+{
+    Chip8::display(opcode, display);
+}
+
+void Chip8::handleOpcodeE(uint16_t opcode, uint16_t x)
+{
+    uint16_t last2Hex = opcode & 0x00FF;
+    uint16_t keyCode = V[x];
+    switch (last2Hex)
+    {
+    case 0x009E:
+        if(keysPressed[keyCode]){
+            PC += 2;
+        }
+        break;
+    case 0x00A1: 
+        if(!keysPressed[keyCode]){
+            PC += 2;
+        }
+        break;
+    
+    default:
+        break;
+    }
+}
+
+void Chip8::handleOpcodeF(uint16_t opcode, uint16_t x)
+{
+    uint16_t last2Hex = opcode & 0x00FF;
+    uint16_t keyPressed = 0;
+    uint16_t buffer = 0;
+    switch (last2Hex)
+    {
+    case 0x0007: // set Vx to delay timer value
+        V[x] = delay;
+        break;
+    case 0x000A: // TODO: keypress
+        keyPressed = checkForKeypress();
+        if(keyPressed == 255){
+            PC -=2;
+        } else{
+            V[x] = keyPressed;
+        }
+        break;
+    case 0x0015: // set delay timer to Vx
+        delay = V[x];
+        break;
+    case 0x0018: // set sound timer to Vx
+        sound = V[x];
+        break;
+    case 0x001E: // Set I = Vx + I
+        I = V[x] + I;
+        break;
+    case 0x0029: // 
+        // Left shift then right shift to get rid of 4 greatest bits
+        buffer = (opcode & 0x0F00) << 4;
+        buffer = buffer >> 12;
+        // Multiply by 5 because there are 5 bytes per character
+        I = V[buffer] * 5;
+
+        break;
+    case 0x0033: // Store BCD of 1's, 10's, and 100's
+        buffer = V[x];
+
+        memory[I] = (buffer / 100) % 10;
+        memory[I + 1] = (buffer / 10) % 10;
+        memory[I + 2] = buffer % 10;
+
+        break;
+    case 0x0055: // The values in V0 to Vx are stored in memory starting at I, then I + 1
+        for(int i = 0; i <= x; i++){
+            memory[I + i] = V[i];
+        }
+        break;
+    case 0x0065: // Load X bytes from memory and load them into registers, starting at 0
+        buffer = (opcode & 0x0F00) >> 8;
+        for(int byte = 0; byte <= buffer; byte++){
+            V[byte] = memory[I + byte];
+        }
+        break;
+    default:
+        break;
+    }
 }

@@ -18,7 +18,7 @@ bool display[DisplayWidth][DisplayHeight] = {0};
 int main(int argc, char** argv)
 {
     SDL_Renderer* renderer = initializeDisplay();
-    chip8.loadProgram("games/snake.ch8");
+    chip8.loadProgram("games/Pong.ch8");
 
     // Used to track user input
     SDL_Event event;
