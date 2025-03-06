@@ -267,8 +267,10 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
             memory[I + 2] = tempval % 10;
 
             break;
-        case 0x0055: // TODO:
-            cout << "TODO\n";
+        case 0x0055: // The values in V0 to Vx are stored in memory starting at I, then I + 1
+            for(int i = 0; i <= ((opcode & 0x0F00) >> 8); i++){
+                memory[I + i] = V[i];
+            }
             break;
         case 0x0065: // Load X bytes from memory and load them into registers, starting at 0
             tempval = (opcode & 0x0F00) >> 8;
@@ -276,8 +278,6 @@ void Chip8::decode(uint16_t opcode, SDL_Renderer* renderer, bool display[Display
                 V[byte] = memory[I + byte];
             }
             break;
-
-        
         default:
             break;
         }
