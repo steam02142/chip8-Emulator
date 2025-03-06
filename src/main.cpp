@@ -16,8 +16,16 @@ bool display[DisplayWidth][DisplayHeight] = {0};
 
 int main(int argc, char** argv)
 {
+    string game;
+    if (argv[1]){
+        game = argv[1];
+    } else {
+        game = "Pong.ch8";
+    }
+    
+
     SDL_Renderer* renderer = initializeDisplay();
-    chip8.loadProgram("games/Breakout.ch8");
+    chip8.loadProgram("games/" + game);
 
     // Used to track user input
     SDL_Event event;
@@ -45,7 +53,7 @@ int main(int argc, char** argv)
         {
             chip8.handleInput(event);
             chip8.fetch(opcode);
-            cout << "Opcode: " << opcode << endl;
+            //cout << "Opcode: " << opcode << endl;
             chip8.decode(opcode, renderer, display);
         }
 
