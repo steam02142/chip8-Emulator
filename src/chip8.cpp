@@ -1,4 +1,4 @@
-#include "chip8.h"
+#include "../includes/chip8.h"
 
 const int FONT_ARRAY_SIZE = 80;
 
@@ -194,7 +194,6 @@ int randomNumber()
 // Polls for keypress
 void Chip8::handleInput(SDL_Event event)
 {
-    SDL_PollEvent(&event);
 
     if (event.type == SDL_KEYDOWN) {
         storeInput(SDL_GetKeyName(event.key.keysym.sym), true);

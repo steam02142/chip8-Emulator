@@ -1,4 +1,4 @@
-#include "display.h"
+#include "../includes/display.h"
 
 SDL_Renderer* initializeDisplay()
 {
